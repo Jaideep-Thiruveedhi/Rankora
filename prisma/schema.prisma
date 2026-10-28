@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ExamType {
+  JEE_MAIN
+  JEE_ADVANCED
+}
+
+enum Category {
+  GENERAL
+  EWS
+  OBC_NCL
+  SC
+  ST
+}
+
+enum QuotaType {
+  AIQ
+  HS
+  OS
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  TRANSGENDER
+}
+
+enum SeatType {
+  OPEN
+  OPEN_PWD
+  GENDER_NEUTRAL
+  FEMALE_ONLY
+}
+
+enum RoundNumber {
+  ROUND_1
+  ROUND_2
+  ROUND_3
+  ROUND_4
+  ROUND_5
+  ROUND_6
+}
+
+model Institute {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String
+  shortName     String?
+  type          String
+  state         String
+  city          String
+  latitude      Float?
+  longitude     Float?
+  website       String?
+  established   Int?
+  nirfRank      Int?
+  branches      Branch[]
+  cutoffs       Cutoff[]
+  @@index([state, type])
+  @@index([name])
+}
+
+model Branch {
+  id            String   @id @default(cuid())
+  code          String
+  name          String
+  instituteId   String
+  institute     Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  cutoffs       Cutoff[]
+  @@unique([instituteId, code])
+  @@index([code])
+}
+
+model AcademicYear {
+  id        String   @id @default(cuid())
+  year      Int      @unique
+  cutoffs   Cutoff[]
+  rounds    CounsellingRound[]
+  mappings  PercentileRankMapping[]
+}
+
+model CounsellingRound {
+  id        String   @id @default(cuid())
+  yearId    String
+  year      AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  roundNo   RoundNumber
+  cutoffs   Cutoff[]
+  @@unique([yearId, roundNo])
+}
+
+model CategoryQuota {
+  id        String   @id @default(cuid())
+  category  Category
+  quota     QuotaType
+  gender    Gender
+  seatType  SeatType
+  cutoffs   Cutoff[]
+  @@unique([category, quota, gender, seatType])
+}
+
+model Cutoff {
+  id                 String   @id @default(cuid())
+  instituteId        String
+  institute          Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  branchId           String
+  branch             Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  yearId             String
+  year               AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  roundId            String
+  round              CounsellingRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  categoryQuotaId    String
+  categoryQuota      CategoryQuota @relation(fields: [categoryQuotaId], references: [id], onDelete: Cascade)
+  openingRank        Int?
+  closingRank        Int?
+  openingPercentile  Float?
+  closingPercentile  Float?
+  source             String
+  sourceUrl          String?
+  importedAt         DateTime @default(now())
+  @@unique([instituteId, branchId, yearId, roundId, categoryQuotaId])
+  @@index([openingRank, closingRank])
+}
+
+model PercentileRankMapping {
+  id         String @id @default(cuid())
+  yearId     String
+  year       AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  percentile Float
+  rank       Int
+  @@unique([yearId, percentile])
+  @@index([percentile])
+}
+
+model DataImport {
+  id          String   @id @default(cuid())
+  year        Int
+  round       Int
+  source      String
+  fileName    String
+  recordCount Int
+  status      String
+  errors      Json?
+  createdAt   DateTime @default(now())
+  @@unique([year, round, source])
+}
+
+// Apply AI (Milestone 2) — student profile for an anonymous workspace.
+// All document/profile values are user-entered and UNVERIFIED. No examination
+// rules are inferred from them. Scalars are nullable so partially-completed
+// drafts can be saved at any time.
+model StudentProfile {
+  id                  String   @id @default(cuid())
+  workspaceId         String   @unique
+  fullName            String?
+  gender              String?
+  dateOfBirth         String?
+  email               String?
+  mobileNumber        String?
+  addressLine         String?
+  city                String?
+  state               String?
+  pinCode             String?
+  class10Board       String?
+  class10PassingYear  Int?
+  class10RollNumber   String?
+  class10MarksKind    String?
+  class10Marks        String?
+  class10Subjects     Json?
+  class12Board       String?
+  class12PassingYear  Int?
+  class12RollNumber   String?
+  class12MarksKind    String?
+  class12Marks        String?
+  class12Subjects     Json?
+  category            String?
+  pwdStatus           Boolean  @default(false)
+  homeState           String?
+  preferredExamCities Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// Uploaded document metadata. Binary content is stored on a private,
+// non-public filesystem path (never under /public and never committed to git).
+// workspaceId is a plain string: documents can exist for a workspace before
+// any profile row does, so no relational FK is imposed here.
+model UploadedDocument {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  documentType String
+  displayLabel String?
+  originalName String
+  storedName   String    @unique
+  mimeType     String
+  sizeBytes    Int
+  versions     Int       @default(1)
+  createdAt    DateTime  @default(now())
+  replacedAt   DateTime?
+  deletedAt    DateTime?
+
+  @@index([workspaceId, documentType])
+}
