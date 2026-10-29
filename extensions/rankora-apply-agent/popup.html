@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rankora Apply Agent</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">R</span>
+        <div>
+          <h1>Rankora Apply Agent</h1>
+          <p class="sub">Review · approve · fill — never submit</p>
+        </div>
+      </div>
+      <span id="connection-chip" class="chip chip-off">…</span>
+    </header>
+
+    <!-- pairing -->
+    <section id="connect-panel" class="panel">
+      <p class="hint">
+        1. On the Rankora agent page, press <strong>Generate pairing code</strong>.<br />
+        2. Paste the code below (this browser's workspace only, valid 15 minutes).
+      </p>
+      <div class="row">
+        <input id="pair-code" type="text" autocomplete="off" spellcheck="false" placeholder="ABCDE-FGHJK-MNPQR" />
+        <button id="pair-button" class="btn primary">Pair</button>
+      </div>
+      <p id="pair-error" class="error hidden"></p>
+    </section>
+
+    <!-- connected -->
+    <section id="connected-panel" class="panel hidden">
+      <p class="hint">
+        Session expires <span id="expires-at">—</span>.
+        <button id="disconnect-button" class="link-danger" type="button">Disconnect here</button>
+      </p>
+
+      <div class="actions">
+        <button id="scan-button" class="btn secondary">Inspect this page</button>
+      </div>
+      <p id="status-line" class="hint"></p>
+
+      <div id="plan-summary" class="summary hidden"></div>
+      <div id="plan-note" class="note hidden"></div>
+
+      <div id="plan-items" class="items hidden"></div>
+
+      <div class="actions" id="approve-actions">
+        <button id="fill-button" class="btn primary" disabled>Fill approved fields</button>
+        <button id="cancel-button" class="btn ghost">Cancel</button>
+      </div>
+
+      <div id="results" class="results hidden"></div>
+    </section>
+
+    <footer class="footer">
+      The agent stops before submission: it never fills passwords, OTPs, CAPTCHAs, payments or uploads, never
+      submits, never pays. Demo builds are not validated against official portals.
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
