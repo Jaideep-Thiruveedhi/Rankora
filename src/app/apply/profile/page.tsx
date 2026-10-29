@@ -5,6 +5,7 @@ import { ApplyHeader } from '@/components/apply/apply-header'
 import { ProfileEditor } from '@/components/apply/student-profile'
 import { DemoDataBadge } from '@/components/apply/status-badge'
 import { useEnsureWorkspace } from '@/lib/apply-ai/api-client'
+import { SaveWorkBanner } from '@/components/apply/save-work-banner'
 
 const emptySubscribe = () => () => {}
 
@@ -14,7 +15,8 @@ function useHydrated() {
 
 export default function ApplyProfilePage() {
   const hydrated = useHydrated()
-  const workspaceReady = useEnsureWorkspace()
+  const { ready: workspaceReady, status: workspaceStatus, rerun: rerunWorkspace } = useEnsureWorkspace()
+  const dataBlocked = workspaceStatus === 'claimable' || workspaceStatus === 'unavailable'
 
   return (
     <div className='min-h-screen bg-gray-50 flex flex-col'>
@@ -47,8 +49,12 @@ export default function ApplyProfilePage() {
           </div>
         </section>
 
+        <section className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4'>
+          <SaveWorkBanner status={workspaceStatus} onSaved={rerunWorkspace} />
+        </section>
+
         <section className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16'>
-          <ProfileEditor profileReady={hydrated && workspaceReady} />
+          <ProfileEditor profileReady={hydrated && workspaceReady && !dataBlocked} />
         </section>
       </main>
 

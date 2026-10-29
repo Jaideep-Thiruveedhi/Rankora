@@ -5,6 +5,7 @@ import { ApplyHeader } from '@/components/apply/apply-header'
 import { DocumentManager } from '@/components/apply/document-checklist'
 import { UnverifiedBadge } from '@/components/apply/status-badge'
 import { useDocuments, useEnsureWorkspace, useProfile } from '@/lib/apply-ai/api-client'
+import { SaveWorkBanner } from '@/components/apply/save-work-banner'
 
 const emptySubscribe = () => () => {}
 
@@ -14,8 +15,9 @@ function useHydrated() {
 
 export default function ApplyDocumentsPage() {
   const hydrated = useHydrated()
-  const workspaceReady = useEnsureWorkspace()
-  const profileQuery = useProfile(workspaceReady)
+  const { ready: workspaceReady, status: workspaceStatus, rerun: rerunWorkspace } = useEnsureWorkspace()
+  const dataBlocked = workspaceStatus === 'claimable' || workspaceStatus === 'unavailable'
+  const profileQuery = useProfile(workspaceReady && !dataBlocked)
   const profileLike = profileQuery.data?.profile ?? null
 
   return (
@@ -49,6 +51,10 @@ export default function ApplyDocumentsPage() {
           </div>
         </section>
 
+        <section className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4'>
+          <SaveWorkBanner status={workspaceStatus} onSaved={rerunWorkspace} />
+        </section>
+
         <section className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16'>
           <div className='mb-5 bg-secondary border border-border rounded-xl p-4 text-[11px] text-secondary-foreground leading-relaxed max-w-3xl'>
             <strong className='font-semibold'>Privacy of your files:</strong> uploads never live in the public web
@@ -56,7 +62,7 @@ export default function ApplyDocumentsPage() {
             never cached. Document contents are never sent to any AI model.
           </div>
 
-          <DocumentManager documentsReady={hydrated && workspaceReady} profileLike={profileLike} />
+          <DocumentManager documentsReady={hydrated && workspaceReady && !dataBlocked} profileLike={profileLike} />
         </section>
       </main>
 

@@ -1,22 +1,16 @@
 import { prisma } from '@/lib/prisma'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { WORKSPACE_COOKIE, readWorkspaceToken } from '@/lib/apply-ai/workspace'
+import { requireWorkspaceId } from '@/lib/apply-ai/workspace'
 import { deleteStoredFile } from '@/lib/apply-ai/storage'
-
-async function requireWorkspace(): Promise<string | null> {
-  const cookieStore = await cookies()
-  return readWorkspaceToken(cookieStore.get(WORKSPACE_COOKIE)?.value)
-}
 
 /** Deletes a document (row + private file). Authorization: workspace owner only. */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const workspaceId = await requireWorkspace()
+  const workspaceId = await requireWorkspaceId()
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not initialised' }, { status: 401 })
   }
@@ -45,7 +39,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const workspaceId = await requireWorkspace()
+  const workspaceId = await requireWorkspaceId()
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not initialised' }, { status: 401 })
   }

@@ -14,6 +14,7 @@ import {
 } from '@/lib/apply-ai/requirements'
 import { DOCUMENT_TYPES } from '@/lib/apply-ai/documents'
 import { useDocuments, useEnsureWorkspace, useProfile } from '@/lib/apply-ai/api-client'
+import { SaveWorkBanner } from '@/components/apply/save-work-banner'
 import type { ApplicationStatus, ExamId, ExamRequirement } from '@/lib/apply-ai/types'
 import { ApplyHeader } from '@/components/apply/apply-header'
 import { ExamCard } from '@/components/apply/exam-card'
@@ -44,11 +45,14 @@ const STATUS_SUMMARY_STYLES: Record<ApplicationStatus, string> = {
  */
 export default function ApplyAIDashboard() {
   const hydrated = useHydrated()
-  const workspaceReady = useEnsureWorkspace()
+  const { ready: workspaceReady, status: workspaceStatus, rerun: rerunWorkspace } = useEnsureWorkspace()
   const [activeExamId, setActiveExamId] = useState<ExamId | null>(null)
 
-  const profileQuery = useProfile(workspaceReady)
-  const documentsQuery = useDocuments(workspaceReady)
+  // Claimable/unavailable states resolve no data (the workspace does not
+  // belong to the caller yet): skip the queries instead of 401 error panels.
+  const dataBlocked = workspaceStatus === 'claimable' || workspaceStatus === 'unavailable'
+  const profileQuery = useProfile(workspaceReady && !dataBlocked)
+  const documentsQuery = useDocuments(workspaceReady && !dataBlocked)
 
   const applications = useApplyStore(state => state.applications)
   const resetTracker = useApplyStore(state => state.resetTracker)
@@ -107,8 +111,11 @@ export default function ApplyAIDashboard() {
     )
   }
 
-  const loading = !hydrated || !workspaceReady || profileQuery.isLoading || documentsQuery.isLoading
-  const errored = profileQuery.isError || documentsQuery.isError
+  const loading =
+    !hydrated ||
+    !workspaceReady ||
+    (!dataBlocked && (profileQuery.isLoading || documentsQuery.isLoading))
+  const errored = !dataBlocked && (profileQuery.isError || documentsQuery.isError)
 
   return (
     <div className='min-h-screen bg-gray-50 flex flex-col'>
@@ -186,6 +193,7 @@ export default function ApplyAIDashboard() {
           <>
             {/* Workspace notice */}
             <section className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+              {workspaceStatus === 'existing' || workspaceStatus === 'created' ? (
               <div className='flex flex-col sm:flex-row sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3'>
                 <span className='text-lg' aria-hidden>ðŸ”</span>
                 <p className='text-xs text-amber-800 flex-1'>
@@ -194,6 +202,13 @@ export default function ApplyAIDashboard() {
                   submits applications, fills CAPTCHAs/OTPs, or makes payments, and never invents exam deadlines,
                   fees or eligibility rules.
                 </p>
+                    <p className='mt-1'>
+                      Create an account or{' '}
+                      <Link href='/login' className='font-semibold underline hover:text-amber-900'>
+                        sign in
+                      </Link>{' '}
+                      to keep this work.
+                    </p>
                 <button
                   type='button'
                   onClick={() => {
@@ -205,6 +220,9 @@ export default function ApplyAIDashboard() {
                   Reset local trackers
                 </button>
               </div>
+              ) : (
+                <SaveWorkBanner status={workspaceStatus} onSaved={rerunWorkspace} />
+              )}
             </section>
 
             {/* Summary chips */}

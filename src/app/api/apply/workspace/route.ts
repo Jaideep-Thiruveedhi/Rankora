@@ -1,23 +1,13 @@
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import {
-  WORKSPACE_COOKIE,
-  createWorkspaceToken,
-  readWorkspaceToken,
-  workspaceCookieOptions,
-} from '@/lib/apply-ai/workspace'
+import { ensureWorkspace } from '@/lib/apply-ai/workspace'
 
 /**
- * Ensures an anonymous Apply AI workspace exists for this browser.
- * Idempotent; the token itself never leaves the httpOnly cookie.
+ * Ensures a workspace exists for this browser/session. Milestone 2 anonymous
+ * minting is preserved; signed-in users resolve or mint an account-owned
+ * workspace instead (see ensureWorkspace). The token itself never leaves the
+ * httpOnly cookie.
  */
 export async function POST() {
-  const cookieStore = await cookies()
-  const existing = readWorkspaceToken(cookieStore.get(WORKSPACE_COOKIE)?.value)
-
-  const response = NextResponse.json({ workspace: existing ? 'existing' : 'created' })
-  if (!existing) {
-    cookieStore.set(WORKSPACE_COOKIE, createWorkspaceToken(), workspaceCookieOptions)
-  }
-  return response
+  const workspace = await ensureWorkspace()
+  return NextResponse.json({ workspace })
 }

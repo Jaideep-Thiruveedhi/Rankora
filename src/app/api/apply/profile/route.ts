@@ -1,10 +1,9 @@
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { WORKSPACE_COOKIE, readWorkspaceToken } from '@/lib/apply-ai/workspace'
+import { requireWorkspaceId } from '@/lib/apply-ai/workspace'
 import { parseProfileDraft } from '@/lib/apply-ai/validation'
 import { evaluateProfile } from '@/lib/apply-ai/requirements'
 import type { StudentProfileData, SubjectEntry } from '@/lib/apply-ai/types'
@@ -45,13 +44,8 @@ function toDTO(row: ProfileRow): StudentProfileData {
   }
 }
 
-async function requireWorkspace(): Promise<string | null> {
-  const cookieStore = await cookies()
-  return readWorkspaceToken(cookieStore.get(WORKSPACE_COOKIE)?.value)
-}
-
 export async function GET() {
-  const workspaceId = await requireWorkspace()
+  const workspaceId = await requireWorkspaceId()
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not initialised' }, { status: 401 })
   }
@@ -68,7 +62,7 @@ export async function GET() {
 const objectSchema = z.record(z.string(), z.unknown())
 
 export async function PUT(request: NextRequest) {
-  const workspaceId = await requireWorkspace()
+  const workspaceId = await requireWorkspaceId()
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not initialised' }, { status: 401 })
   }

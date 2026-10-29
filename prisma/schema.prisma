@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -49,91 +50,97 @@ enum RoundNumber {
 }
 
 model Institute {
-  id            String   @id @default(cuid())
-  code          String   @unique
-  name          String
-  shortName     String?
-  type          String
-  state         String
-  city          String
-  latitude      Float?
-  longitude     Float?
-  website       String?
-  established   Int?
-  nirfRank      Int?
-  branches      Branch[]
-  cutoffs       Cutoff[]
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  shortName   String?
+  type        String
+  state       String
+  city        String
+  latitude    Float?
+  longitude   Float?
+  website     String?
+  established Int?
+  nirfRank    Int?
+  branches    Branch[]
+  cutoffs     Cutoff[]
+
   @@index([state, type])
   @@index([name])
 }
 
 model Branch {
-  id            String   @id @default(cuid())
-  code          String
-  name          String
-  instituteId   String
-  institute     Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  cutoffs       Cutoff[]
+  id          String    @id @default(cuid())
+  code        String
+  name        String
+  instituteId String
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  cutoffs     Cutoff[]
+
   @@unique([instituteId, code])
   @@index([code])
 }
 
 model AcademicYear {
-  id        String   @id @default(cuid())
-  year      Int      @unique
-  cutoffs   Cutoff[]
-  rounds    CounsellingRound[]
-  mappings  PercentileRankMapping[]
+  id       String                  @id @default(cuid())
+  year     Int                     @unique
+  cutoffs  Cutoff[]
+  rounds   CounsellingRound[]
+  mappings PercentileRankMapping[]
 }
 
 model CounsellingRound {
-  id        String   @id @default(cuid())
-  yearId    String
-  year      AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
-  roundNo   RoundNumber
-  cutoffs   Cutoff[]
+  id      String       @id @default(cuid())
+  yearId  String
+  year    AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  roundNo RoundNumber
+  cutoffs Cutoff[]
+
   @@unique([yearId, roundNo])
 }
 
 model CategoryQuota {
-  id        String   @id @default(cuid())
-  category  Category
-  quota     QuotaType
-  gender    Gender
-  seatType  SeatType
-  cutoffs   Cutoff[]
+  id       String    @id @default(cuid())
+  category Category
+  quota    QuotaType
+  gender   Gender
+  seatType SeatType
+  cutoffs  Cutoff[]
+
   @@unique([category, quota, gender, seatType])
 }
 
 model Cutoff {
-  id                 String   @id @default(cuid())
-  instituteId        String
-  institute          Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
-  branchId           String
-  branch             Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  yearId             String
-  year               AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
-  roundId            String
-  round              CounsellingRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  categoryQuotaId    String
-  categoryQuota      CategoryQuota @relation(fields: [categoryQuotaId], references: [id], onDelete: Cascade)
-  openingRank        Int?
-  closingRank        Int?
-  openingPercentile  Float?
-  closingPercentile  Float?
-  source             String
-  sourceUrl          String?
-  importedAt         DateTime @default(now())
+  id                String           @id @default(cuid())
+  instituteId       String
+  institute         Institute        @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+  branchId          String
+  branch            Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  yearId            String
+  year              AcademicYear     @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  roundId           String
+  round             CounsellingRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  categoryQuotaId   String
+  categoryQuota     CategoryQuota    @relation(fields: [categoryQuotaId], references: [id], onDelete: Cascade)
+  openingRank       Int?
+  closingRank       Int?
+  openingPercentile Float?
+  closingPercentile Float?
+  source            String
+  sourceUrl         String?
+  importedAt        DateTime         @default(now())
+
   @@unique([instituteId, branchId, yearId, roundId, categoryQuotaId])
   @@index([openingRank, closingRank])
 }
 
 model PercentileRankMapping {
-  id         String @id @default(cuid())
+  id         String       @id @default(cuid())
   yearId     String
   year       AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
   percentile Float
   rank       Int
+
   @@unique([yearId, percentile])
   @@index([percentile])
 }
@@ -148,6 +155,7 @@ model DataImport {
   status      String
   errors      Json?
   createdAt   DateTime @default(now())
+
   @@unique([year, round, source])
 }
 
@@ -155,6 +163,7 @@ model DataImport {
 // All document/profile values are user-entered and UNVERIFIED. No examination
 // rules are inferred from them. Scalars are nullable so partially-completed
 // drafts can be saved at any time.
+
 model StudentProfile {
   id                  String   @id @default(cuid())
   workspaceId         String   @unique
@@ -167,13 +176,13 @@ model StudentProfile {
   city                String?
   state               String?
   pinCode             String?
-  class10Board       String?
+  class10Board        String?
   class10PassingYear  Int?
   class10RollNumber   String?
   class10MarksKind    String?
   class10Marks        String?
   class10Subjects     Json?
-  class12Board       String?
+  class12Board        String?
   class12PassingYear  Int?
   class12RollNumber   String?
   class12MarksKind    String?
@@ -191,6 +200,7 @@ model StudentProfile {
 // non-public filesystem path (never under /public and never committed to git).
 // workspaceId is a plain string: documents can exist for a workspace before
 // any profile row does, so no relational FK is imposed here.
+
 model UploadedDocument {
   id           String    @id @default(cuid())
   workspaceId  String
@@ -206,4 +216,121 @@ model UploadedDocument {
   deletedAt    DateTime?
 
   @@index([workspaceId, documentType])
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  workspaces    Workspace[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// Milestone 3 — ownership registry keyed by the EXISTING anonymous workspace
+// token (the 64-hex cookie value) as primary key: no student-data migration is
+// needed to adopt it. Deliberately NO foreign keys into StudentProfile or
+// UploadedDocument; those tables keep their plain-string workspaceId columns.
+// A user owns at most ONE workspace (@@unique([userId])): that constraint is
+// the transactional guard that makes concurrent claims fail loudly (P2002)
+// instead of merging or silently overwriting ownership.
+model Workspace {
+  id        String    @id
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  claimedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId])
+  @@map("workspace")
+}
+
+// Apply Agent (V1) — single-use pairing ticket between a browser extension and
+// the workspace the student is signed in to on rankora.org/apply/agent. The
+// workspaceId stays a plain string (same rule as the other apply tables): the
+// row is created server-side FROM the resolved workspace cookie, so the
+// httpOnly cookie itself is never exposed to extension JavaScript.
+model AgentPairingTicket {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  workspaceId String
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+
+  @@index([workspaceId])
+  @@map("agent_pairing_ticket")
+}
+
+// Short-lived, revocable session granted to the extension after pairing. The
+// id IS the extension-held bearer token (64-hex). planJson caches the latest
+// redacted detection/mapping plan (field labels only — never student values)
+// so the /apply/agent page can preview what the extension detected.
+model AgentSession {
+  id          String    @id
+  workspaceId String
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  plan        Json?
+  planAt      DateTime?
+
+  @@index([workspaceId])
+  @@map("agent_session")
 }

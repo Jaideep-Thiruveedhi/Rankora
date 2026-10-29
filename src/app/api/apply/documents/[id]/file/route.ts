@@ -1,8 +1,7 @@
 import { prisma } from '@/lib/prisma'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { WORKSPACE_COOKIE, readWorkspaceToken } from '@/lib/apply-ai/workspace'
+import { requireWorkspaceId } from '@/lib/apply-ai/workspace'
 import { openStoredFileAsStream } from '@/lib/apply-ai/storage'
 
 /**
@@ -17,8 +16,7 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const cookieStore = await cookies()
-  const workspaceId = readWorkspaceToken(cookieStore.get(WORKSPACE_COOKIE)?.value)
+  const workspaceId = await requireWorkspaceId()
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not initialised' }, { status: 401 })
   }

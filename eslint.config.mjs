@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // One-line debris scripts from an earlier repair attempt with invalid JS syntax:
     'fix-*.js',
+    // Chrome extension (MV3) — plain browser JavaScript outside the app lint style.
+    'extensions/**',
   ]),
 ])
 
